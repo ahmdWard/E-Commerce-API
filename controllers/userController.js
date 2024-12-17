@@ -1,6 +1,7 @@
 const User = require('../models/userModel')
+const catchAsync = require('../middleware/catchAsync')
 
-exports.getAllUsers  = async (req,res,next)=>{
+exports.getAllUsers  = catchAsync(async(req,res,next)=>{
 
     const users = await User.find()
 
@@ -11,9 +12,9 @@ exports.getAllUsers  = async (req,res,next)=>{
             users
         }
     })
-}
+})
 
-exports.createUser = async (req,res,next)=>{
+exports.createUser = catchAsync(async(req,res,next)=>{
     
     const user = await User.create(req.body)
 
@@ -23,4 +24,4 @@ exports.createUser = async (req,res,next)=>{
              user
         }
     })
-}
+})
