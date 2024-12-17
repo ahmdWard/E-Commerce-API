@@ -5,7 +5,7 @@ const morgan = require('morgan')
 dotenv.config()
 
 const userRoute = require('./routers/userRoute')
-
+const globalErrors = require('./middleware/errorController')
 
 
 const app = express()
@@ -21,6 +21,7 @@ if (NODE_ENV === 'development') {
 
 app.use('/api/v1/user',userRoute)
 
+app.use(globalErrors);
 
 
 module.exports= app
