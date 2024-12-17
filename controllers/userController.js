@@ -18,12 +18,12 @@ exports.getAllUsers  = catchAsync(async(req,res,next)=>{
 
 exports.createUser = catchAsync(async(req,res,next)=>{
     
-    const user = await User.create(req.body)
+    const newUser = await User.create(req.body)
 
     res.status(201).json({
         status:"success",
         data:{
-             user
+             newUser
         }
     })
 })
@@ -33,12 +33,31 @@ exports.getUser = catchAsync(async(req,res,next)=>{
     const user = await User.findById(req.params.id)
 
     if(!user)
-        next(new AppError('this user is not found',404))
+       return next(new AppError('this user is not found',404))
 
     res.status(200).json({
         status:"success",
         data:{
             user
+        }
+    })
+})
+
+exports.updateUser = catchAsync(async(req,res,next)=>{
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id,{
+        firstname:req.body.firstname,
+        lastname:req.body.lastname,
+        phone:req.body.phone
+    })
+
+    if(!updatedUser)
+       return next(new AppError('this user is not found',500))
+
+    res.status(200).json({
+        status:"success",
+        data:{
+            updatedUser
         }
     })
 })

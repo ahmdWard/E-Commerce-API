@@ -12,5 +12,6 @@ router
 router
 .route('/:id')
 .get(userController.getUser)
+.patch(userController.updateUser)
 
 module.exports = router
