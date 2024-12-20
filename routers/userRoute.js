@@ -1,8 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const userController = require('../controllers/userController')
-const { route } = require('../app')
+const authController= require('../controllers/authController')
 
+
+
+router
+.route('/login')
+.post(authController.login)
+
+router
+.route('/signup')
+.post(authController.signUp)
 
 router
 .route('/')
