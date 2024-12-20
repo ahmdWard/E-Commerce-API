@@ -22,12 +22,13 @@ const userSchema = new mongoose.Schema({
     phone:{
         type:String,
         required:[true,'phone number is required'],
-        unique:[true,"email must be unique"]
+        unique:[true,"phone must be unique"]
     },
     password:{
         type:String,
         required:[true,"password is required"],
-        minlength:[10,"password is too short"]
+        minlength:[10,"password is too short"],
+        select:false
 
     },
     passwordconfirm:{
@@ -54,5 +55,11 @@ userSchema.pre('save',async function(next){
     this.passwordconfirm = undefined
     next()
 })
+
+userSchema.methods.comparePassword = async function (candidatePassword,userPassword){
+
+  return await bcrypt.compare(candidatePassword,userPassword)
+    
+}
 
 module.exports=mongoose.model('user',userSchema)
