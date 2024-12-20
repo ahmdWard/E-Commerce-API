@@ -25,4 +25,28 @@ exports.login = catchAsync(async(req,res,next)=>{
 
 })
 
+exports.signUp = catchAsync(async(req,res,next)=>{
+    const { firstname, lastname , email, phone, password, passwordconfirm ,role } = req.body;
 
+    if (!firstname ||!lastname || !email || !phone || !password || !passwordconfirm) {
+         return next(new AppError('All fields are required', 400));
+    }
+
+    const newUser = await User.create({
+        firstname: firstname.trim(),
+        lastname: lastname.trim(),
+        email: email.toLowerCase().trim(),
+        phone: phone.trim(),
+        password,
+        passwordconfirm,
+        role, 
+    });
+
+    res.status(201).json({
+        status:'success',
+        data:{
+            newUser
+        }
+    })
+    
+})
