@@ -2,7 +2,34 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
 const AppError = require('../utilts/appError')
+const { promisify } = require('util');
 const catchAsync = require('../middleware/catchAsync')
+
+
+exports.protect = catchAsync(async(req,res,next)=>{
+
+    let token
+
+    if(req.headers.authorization||!req.headers.authorization.startsWith('Bearer'))
+        token = req.headers.authorization.split(' ')[1]
+   
+    if(!token)
+        return next(new AppError('login first to get the access')) 
+
+    console.log(token)
+
+    const decoded = await promisify (jwt.verify)(token,process.env.JWT_SECRET)
+    
+    const currentUser = await User.findById(decoded.id)
+
+    if (!currentUser) {
+        return next(new AppError('The user belonging to this token does no longer exist.', 401));
+    }
+
+    req.user = currentUser
+    next()
+})
+
 
 exports.login = catchAsync(async(req,res,next)=>{
    
@@ -11,7 +38,7 @@ exports.login = catchAsync(async(req,res,next)=>{
     if (!email || !password) {
         return next(new AppError('Please provide email and password', 400));
     }
-    
+
     const user = await User.findOne({ email }).select("+password")
     if(!user)
        return next(new AppError('Email or password is not correct',403))
