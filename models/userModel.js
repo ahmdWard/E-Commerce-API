@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const { default: isEmail } = require('validator/lib/isEmail')
+const AppError = require('../utilts/appError')
+const bcrypt = require('bcrypt')
+
 const userSchema = new mongoose.Schema({
     firstname:{
         type:String,
@@ -43,6 +46,13 @@ const userSchema = new mongoose.Schema({
         default:'user'
     }
 
+})
+
+userSchema.pre('save',async function(next){
+
+    this.password = await bcrypt.hash(this.password,12)
+    this.passwordconfirm = undefined
+    next()
 })
 
 module.exports=mongoose.model('user',userSchema)
