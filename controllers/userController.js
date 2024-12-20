@@ -18,14 +18,10 @@ exports.getAllUsers  = catchAsync(async(req,res,next)=>{
 
 exports.createUser = catchAsync(async(req,res,next)=>{
     
-    const newUser = await User.create(req.body)
-
-    res.status(201).json({
-        status:"success",
-        data:{
-             newUser
-        }
-    })
+    return(new AppError(
+        'this route is not for creating accounts. Please use /signUp.'
+        ,400
+    ))
 })
 
 exports.getUser = catchAsync(async(req,res,next)=>{
@@ -43,24 +39,33 @@ exports.getUser = catchAsync(async(req,res,next)=>{
     })
 })
 
-exports.updateUser = catchAsync(async(req,res,next)=>{
+exports.updateMe = catchAsync(async(req,res,next)=>{
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id,{
-        firstname:req.body.firstname,
-        lastname:req.body.lastname,
-        phone:req.body.phone
+    const {firstname,lastname,phone,email} = req.body
+    
+    const {password,passwordconfirm} = req.body
+
+    if(password||passwordconfirm)
+         return (new AppError('This route is not for password updates. Please use /changePassword.',400))
+
+    const user = await User.findByIdAndUpdate({_id:req.user.id},{
+        firstname,
+        lastname,
+        phone,
+        email
+    },{
+        new:true,
+        runValidtors:true
     })
-
-    if(!updatedUser)
-       return next(new AppError('this user is not found',500))
 
     res.status(200).json({
         status:"success",
         data:{
-            updatedUser
+            user
         }
     })
 })
+
 
 exports.deleteUser = catchAsync(async(req,res,next)=>{
 
