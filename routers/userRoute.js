@@ -13,6 +13,16 @@ router
 .route('/signup')
 .post(authController.signUp)
 
+router.use(authController.protect)
+
+router
+.route('/updateMe')
+.patch(userController.updateMe)
+
+router
+.route('/changepassword')
+.post(userController.changePassword)
+
 router
 .route('/')
 .get(userController.getAllUsers)
@@ -21,7 +31,6 @@ router
 router
 .route('/:id')
 .get(userController.getUser)
-.patch(userController.updateUser)
 .delete(userController.deleteUser)
 
 module.exports = router
