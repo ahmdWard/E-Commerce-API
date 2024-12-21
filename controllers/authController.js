@@ -14,16 +14,18 @@ exports.protect = catchAsync(async(req,res,next)=>{
         token = req.headers.authorization.split(' ')[1]
    
     if(!token)
-        return next(new AppError('login first to get the access')) 
-
-    console.log(token)
+        return next(new AppError(
+    'login first to get the access'
+    ,401)) 
 
     const decoded = await promisify (jwt.verify)(token,process.env.JWT_SECRET)
     
     const currentUser = await User.findById(decoded.id)
 
     if (!currentUser) {
-        return next(new AppError('The user belonging to this token does no longer exist.', 401));
+        return next(new AppError(
+            'The user belonging to this token does no longer exist.'
+            , 401));
     }
 
     req.user = currentUser
@@ -36,16 +38,22 @@ exports.login = catchAsync(async(req,res,next)=>{
     const {email , password} = req.body
 
     if (!email || !password) {
-        return next(new AppError('Please provide email and password', 400));
+        return next(new AppError(
+            'Please provide email and password'
+            , 400));
     }
 
     const user = await User.findOne({ email }).select("+password")
     if(!user)
-       return next(new AppError('Email or password is not correct',403))
+       return next(new AppError(
+    'Email or password is not correct'
+    ,403))
 
-    console.log(password,user.password)
-    if(!user.comparePassword(password,user.password))
-      return  next(new AppError('Email or password is not correct',403))
+
+    if(! await user.comparePassword(password,user.password))
+      return  next(new AppError(
+    'Email or password is not correct'
+    ,403))
 
     const token = jwt.sign({ id:user.id},process.env.JWT_SECRET,{
         expiresIn:process.env.JWT_EXPIRATION
