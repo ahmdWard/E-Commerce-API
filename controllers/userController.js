@@ -29,7 +29,9 @@ exports.getUser = catchAsync(async(req,res,next)=>{
     const user = await User.findById(req.params.id)
 
     if(!user)
-       return next(new AppError('this user is not found',404))
+       return next(new AppError(
+    'this user is not found'
+    ,404))
 
     res.status(200).json({
         status:"success",
@@ -46,7 +48,9 @@ exports.updateMe = catchAsync(async(req,res,next)=>{
     const {password,passwordconfirm} = req.body
 
     if(password||passwordconfirm)
-         return (new AppError('This route is not for password updates. Please use /changePassword.',400))
+         return next (new AppError(
+        'This route is not for password updates. Please use /changePassword.'
+        ,400))
 
     const user = await User.findByIdAndUpdate({_id:req.user.id},{
         firstname,
@@ -65,6 +69,57 @@ exports.updateMe = catchAsync(async(req,res,next)=>{
         }
     })
 })
+
+
+exports.changePassword = catchAsync(async(req,res,next)=>{
+
+    const {currentPassword,newPassword,passwordconfirm} = req.body
+
+    if (!currentPassword || !newPassword || !passwordconfirm) {
+        return next(new AppError(
+            'All fields are required'
+            , 400));
+    }
+
+
+    const user = await User.findById({_id:req.user.id}).select("+password")
+
+    if (!user) {
+        return next(new AppError('User not found', 404));
+    }
+
+
+
+    if(!user.comparePassword(currentPassword,user.password))
+        return next(new AppError(
+    'the current password is not the right'
+    ,403))
+    
+    console.log(currentPassword,newPassword)
+
+    if(await user.comparePassword(newPassword,user.password))
+        return next(new AppError(
+            `you cann't set your current password as your new password`
+            ,400))
+
+    
+    if (newPassword !== passwordconfirm) {
+        return next(new AppError(
+            'Password confirmation does not match'
+            , 400));
+    }
+    
+    user.password = newPassword;
+    user.passwordconfirm = passwordconfirm
+    user.passwordChangedAt = new Date()
+    await user.save();
+
+    res.status(200).json({
+        status:"success"
+    })
+
+})
+
 
 
 exports.deleteUser = catchAsync(async(req,res,next)=>{
