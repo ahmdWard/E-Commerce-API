@@ -13,6 +13,15 @@ router
 .route('/signup')
 .post(authController.signUp)
 
+router
+.route('/forgetpassword')
+.post(authController.forgetPassword)
+
+
+router
+.route("/resetpassword/:token")
+.post(authController.resetpassword)
+
 router.use(authController.protect)
 
 router

@@ -3,6 +3,7 @@ const validator = require('validator')
 const { default: isEmail } = require('validator/lib/isEmail')
 const AppError = require('../utilts/appError')
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 
 const userSchema = new mongoose.Schema({
     firstname:{
@@ -46,7 +47,9 @@ const userSchema = new mongoose.Schema({
         enum:['user','admin'],
         default:'user'
     },
-    passwordChangedAt:Date
+    passwordChangedAt:Date,
+    passwordResetToken:String,
+    passwordResetTokenExpire:Date
 
 })
 
@@ -63,6 +66,20 @@ userSchema.methods.comparePassword = async function (candidatePassword,userPassw
 
   return await bcrypt.compare(candidatePassword,userPassword)
     
+}
+
+userSchema.methods.genrateResetToken= function(){
+    
+    const resetToken = crypto.randomBytes(32).toString('hex')
+
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+
+    this.passwordResetTokenExpire = Date.now() + 10 * 60 * 1000
+
+    console.log(resetToken,this.passwordResetToken ,this.passwordResetTokenExpire)
+
+    return resetToken
+
 }
 
 module.exports=mongoose.model('user',userSchema)

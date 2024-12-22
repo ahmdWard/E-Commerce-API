@@ -1,10 +1,11 @@
 
 const jwt = require('jsonwebtoken')
+const crypto = require ('crypto')
 const User = require('../models/userModel')
 const AppError = require('../utilts/appError')
 const { promisify } = require('util');
-const catchAsync = require('../middleware/catchAsync')
-
+const catchAsync = require('../middleware/catchAsync');
+const { log } = require('console');
 
 exports.protect = catchAsync(async(req,res,next)=>{
 
@@ -71,7 +72,9 @@ exports.signUp = catchAsync(async(req,res,next)=>{
     const { firstname, lastname , email, phone, password, passwordconfirm ,role } = req.body;
 
     if (!firstname ||!lastname || !email || !phone || !password || !passwordconfirm) {
-         return next(new AppError('All fields are required', 400));
+         return next(new AppError(
+            'All fields are required',
+             400));
     }
 
     const newUser = await User.create({
@@ -92,3 +95,79 @@ exports.signUp = catchAsync(async(req,res,next)=>{
     })
     
 })
+
+
+exports.forgetPassword = catchAsync(async(req,res,next)=>{
+
+    const {email} = req.body
+
+    if(!email)
+        return next(new AppError(
+        'you should provide an e-mail',
+        400))
+
+    const user = await User.findOne({email})
+
+    if(!user)
+        return next(new AppError(
+        'Please enter a valid e-mail'
+         ,400))
+
+    const resetToken = user.genrateResetToken()
+
+    try {
+        await user.save({ validateBeforeSave: false });
+    } catch (err) {
+        return next(new AppError(
+            'Failed to save the reset token. Please try again later.'
+            , 500));
+    }
+
+    res.status(200).json({
+        status:"success",
+        data:{
+            resetToken
+        }
+    })
+})
+
+
+exports.resetpassword = catchAsync(async(req,res,next)=>{
+
+    const resetToken = req.params.token
+
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+
+    
+    const user = await User.findOne({
+        passwordResetToken:hashedToken,
+        passwordResetTokenExpire:{$gt : Date.now()}
+    }).select('+password')
+
+    if(!user)
+        return next(new AppError(
+        'this token is not valid or expired'
+        ,400))
+
+    const {newPassword ,passwordconfirm} = req.body
+    
+    if(await user.comparePassword(newPassword,user.password))
+        return next(new AppError(
+            `you cann't set your current password as your new password`
+            ,400))
+
+
+    user.password=newPassword
+    user.passwordconfirm=passwordconfirm
+    user.passwordChangedAt= Date.now()
+
+    user.passwordResetToken=undefined
+    user.passwordResetTokenExpire=undefined
+
+    await user.save()
+
+    res.status(200).json({
+        status:"success",
+    })
+})
+
