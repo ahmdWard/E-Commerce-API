@@ -18,7 +18,7 @@ exports.getAllUsers  = catchAsync(async(req,res,next)=>{
 
 exports.createUser = catchAsync(async(req,res,next)=>{
     
-    return(new AppError(
+    return next(new AppError(
         'this route is not for creating accounts. Please use /signUp.'
         ,400
     ))
@@ -95,7 +95,6 @@ exports.changePassword = catchAsync(async(req,res,next)=>{
     'the current password is not the right'
     ,403))
     
-    console.log(currentPassword,newPassword)
 
     if(await user.comparePassword(newPassword,user.password))
         return next(new AppError(
@@ -111,7 +110,7 @@ exports.changePassword = catchAsync(async(req,res,next)=>{
     
     user.password = newPassword;
     user.passwordconfirm = passwordconfirm
-    user.passwordChangedAt = new Date()
+    user.passwordChangedAt = Date.now()
     await user.save();
 
     res.status(200).json({
@@ -129,7 +128,5 @@ exports.deleteUser = catchAsync(async(req,res,next)=>{
     if(!deletedUser)
         next(new AppError('this user is not found',404))
     
-    res.status(204).json({
-        status:"success"
-    })
+    res.status(204)
 })
