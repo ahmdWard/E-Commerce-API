@@ -55,8 +55,12 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:true,
         select:false
-    }
+    },
+    isBlocked:{
+        type:Boolean,
+        default:false,
 
+    }
 })
 
 userSchema.pre('save',async function(next){

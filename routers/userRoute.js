@@ -48,4 +48,12 @@ router
 .get(userController.getUser)
 .delete(userController.deleteUser)
 
+router
+.route('/block/:id')
+.patch(userController.block)
+
+router
+.route('/unblock/:id')
+.patch(userController.unBlock)
+
 module.exports = router

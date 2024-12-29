@@ -141,3 +141,30 @@ exports.deleteUser = catchAsync(async(req,res,next)=>{
     
     res.status(204)
 })
+
+
+exports.block = catchAsync(async(req,res,next)=>{
+   
+     await User.findByIdAndUpdate(req.params.id,{isBlocked:true},{
+       new:true,
+       runValidators:true 
+    })
+
+    res.status(200).json({
+        status:"success",
+    })
+
+})
+
+exports.unBlock = catchAsync(async(req,res,next)=>{
+    
+    await User.findByIdAndUpdate(req.params.id,{isBlocked:false},{
+        new:true,
+        runValidators:true
+    })
+
+    res.status(200).json({
+        status:"success"
+    })
+
+})
