@@ -76,8 +76,6 @@ userSchema.methods.genrateResetToken= function(){
 
     this.passwordResetTokenExpire = Date.now() + 10 * 60 * 1000
 
-    console.log(resetToken,this.passwordResetToken ,this.passwordResetTokenExpire)
-
     return resetToken
 
 }

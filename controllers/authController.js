@@ -1,11 +1,11 @@
 
 const jwt = require('jsonwebtoken')
 const crypto = require ('crypto')
+const { promisify } = require('util');
 const User = require('../models/userModel')
 const AppError = require('../utilts/appError')
-const { promisify } = require('util');
 const catchAsync = require('../middleware/catchAsync');
-const { log } = require('console');
+const sendEmail = require('../utilts/sendEmail')
 
 exports.protect = catchAsync(async(req,res,next)=>{
 
@@ -122,13 +122,68 @@ exports.forgetPassword = catchAsync(async(req,res,next)=>{
             'Failed to save the reset token. Please try again later.'
             , 500));
     }
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/user/resetpassword/${resetToken}`
 
-    res.status(200).json({
-        status:"success",
-        data:{
-            resetToken
-        }
-    })
+    const message = ` 
+                        <html>
+                            <head>
+                               <style>
+                             body {
+                                        font-family: Arial, sans-serif;
+                                        line-height: 1.6;
+                                        padding: 20px;
+                                    }
+                                    h2 {
+                                        color: #333;
+                                    }
+                                    p {
+                                        color: #555;
+                                    }
+                                    .reset-link {
+                                        display: inline-block;
+                                        padding: 10px 15px;
+                                        background-color: #007BFF;
+                                        color: white;
+                                        text-decoration: none;
+                                        border-radius: 5px;
+                                        margin-top: 10px;
+                                    }
+                                </style>
+                            </head>
+                                <body>
+                                        <h2>Forgot your Password?</h2>
+                                        <p>Submit a Patch request with your new password and <strong>passwordConfirm</strong> to <a href="${resetUrl}" class="reset-link">${resetUrl}</a>.</p>
+                                        <p>If you didn't forget your password, please ignore this email. Don't worry, maybe someone typed your email by mistake.</p>
+                                </body>
+                        </html>
+`;
+
+     
+    try {
+        
+        await sendEmail({
+            to:user.email,
+            subject:' your password reset token (valid in 10min)',
+            message
+        })
+
+        res.status(200).json({
+            status:"success",
+            message:"send email successfully"
+        })
+
+        
+    } catch (error) {
+
+        user.passwordResetToken = undefined,
+        user.passwordResetTokenExpire =undefined
+        await user.save({ validateBeforeSave: false });
+        
+        return next (new AppError(
+            `There was an error sending the email. Try again later! ,message:${error.message}`
+            ,500))
+         }
+    
 })
 
 
