@@ -17,20 +17,26 @@ router
 .route('/forgetpassword')
 .post(authController.forgetPassword)
 
-
 router
 .route("/resetpassword/:token")
 .post(authController.resetpassword)
 
+
 router.use(authController.protect)
 
 router
-.route('/updateMe')
+.route('/updateme')
 .patch(userController.updateMe)
 
 router
 .route('/changepassword')
 .post(userController.changePassword)
+
+router
+.route('/deleteme')
+.patch(userController.deleteMe)
+
+router.use(authController.restrictTo('admin'))
 
 router
 .route('/')
