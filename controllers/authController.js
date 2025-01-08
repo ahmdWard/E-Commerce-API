@@ -32,7 +32,6 @@ exports.protect = catchAsync(async(req,res,next)=>{
     else if (req.cookies.jwt) {
         token = req.cookies.jwt;
     }
-    console.log(token)
    
     if(!token)
         return next(new AppError(
@@ -90,50 +89,6 @@ exports.refreshToken = catchAsync(async(req,res,next)=>{
 })
 
 
-exports.login = catchAsync(async(req,res,next)=>{
-   
-    const {email , password} = req.body
-
-    if (!email || !password) {
-        return next(new AppError(
-            'Please provide email and password'
-            , 400));
-    }
-
-    const user = await User.findOne({ email }).select("+password")
-    if(!user||! await user.comparePassword(password,user.password))
-       return next(new AppError(
-    'Email or password is not correct'
-    ,403))
-
-
-    const { accessToken, refreshToken } = generateTokens(user.id);
-
-
-    user.refreshToken= refreshToken 
-
-    await user.save({validateBeforeSave:false})
-
-    res.cookie('jwt',accessToken,{
-        expires:new Date(Date.now() + 24 * 60 * 60 * 1000),
-        httpOnly:true
-    })
-    
-    res.cookie('refreshToken',refreshToken,{
-        expires:new Date(Date.now() + process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 60 * 60 * 1000),
-        httpOnly:true
-    })
-    
-
-    res.status(200).json({
-        status:"success",
-        message: 'Logged in successfully',
-        accessToken,
-        refreshToken
-    })
-
-})
-
 exports.signUp = catchAsync(async(req,res,next)=>{
     const { firstname, lastname , email, phone, password, passwordconfirm ,role } = req.body;
 
@@ -161,6 +116,72 @@ exports.signUp = catchAsync(async(req,res,next)=>{
     })
     
 })
+
+
+exports.login = catchAsync(async(req,res,next)=>{
+   
+    const {email , password} = req.body
+
+    if (!email || !password) {
+        return next(new AppError(
+            'Please provide email and password'
+            , 400));
+    }
+
+    const user = await User.findOne({ email }).select("+password")
+    if(!user||! await user.comparePassword(password,user.password))
+       return next(new AppError(
+    'Email or password is not correct'
+    ,403))
+
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+
+
+
+    await user.save({validateBeforeSave:false})
+
+    res.cookie('jwt',accessToken,{
+        expires:new Date(Date.now() + 24 * 60 * 60 * 1000),
+        httpOnly:true
+    })
+    
+    res.cookie('refreshToken',refreshToken,{
+        expires:new Date(Date.now() + process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 60 * 60 * 1000),
+        httpOnly:true
+    })
+    
+
+    res.status(200).json({
+        status:"success",
+        message: 'Logged in successfully',
+        accessToken,
+        refreshToken
+    })
+
+})
+
+
+
+exports.logOut = catchAsync(async(req,res,next)=>{
+
+    const user = await User.findById(req.user.id)
+    res.cookie('refreshToken','loggedOut',{
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+    res.cookie('jwt','loggedOut',{
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+
+    res.status(200).json({
+        status:"success",
+        message:"Logged out successfully"
+    })
+
+})
+
 
 
 
@@ -306,26 +327,6 @@ exports.resetPassword = catchAsync(async(req,res,next)=>{
 })
 
 
-exports.logOut = catchAsync(async(req,res,next)=>{
-
-    const user = await User.findById(req.user.id)
-    res.cookie('refreshToken','loggedOut',{
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
-    })
-    res.cookie('jwt','loggedOut',{
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
-    })
-    user.refreshToken=undefined;
-    await user.save({validateBeforeSave:false})
-
-    res.status(200).json({
-        status:"success",
-        message:"Logged out successfully"
-    })
-
-})
 
 exports.changePassword = catchAsync(async(req,res,next)=>{
 

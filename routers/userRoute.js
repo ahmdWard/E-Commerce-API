@@ -31,6 +31,9 @@ router
 
 router.use(authController.protect)
 
+
+
+
 router
 .route('/updateme')
 .patch(userController.updateMe)
@@ -47,7 +50,12 @@ router
 .route('/logout')
 .get(authController.logOut)
 
+
+
+
 router.use(authController.restrictTo('admin'))
+
+
 
 router
 .route('/')
@@ -67,8 +75,5 @@ router
 .route('/unblock/:id')
 .patch(userController.unBlock)
 
-router
-.route('/logout')
-.post(authController.logOut)
 
 module.exports = router

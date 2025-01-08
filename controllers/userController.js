@@ -82,7 +82,6 @@ exports.deleteMe = catchAsync(async(req,res,next)=>{
 })
 
 
-
 exports.deleteUser = catchAsync(async(req,res,next)=>{
 
     const deletedUser = await User.findByIdAndDelete(req.params.id)
