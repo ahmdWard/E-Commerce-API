@@ -1,7 +1,7 @@
 const express =require ('express')
 const dotenv =require('dotenv')
 const morgan = require('morgan')
-
+const cookieParser = require('cookie-parser')
 dotenv.config()
 
 const userRoute = require('./routers/userRoute')
@@ -11,6 +11,7 @@ const globalErrors = require('./middleware/errorController')
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
 
 const NODE_ENV = process.env.NODE_ENV
 if (NODE_ENV === 'development') {

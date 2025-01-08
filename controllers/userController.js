@@ -82,55 +82,6 @@ exports.deleteMe = catchAsync(async(req,res,next)=>{
 })
 
 
-exports.changePassword = catchAsync(async(req,res,next)=>{
-
-    const {currentPassword,newPassword,passwordconfirm} = req.body
-
-    if (!currentPassword || !newPassword || !passwordconfirm) {
-        return next(new AppError(
-            'All fields are required'
-            , 400));
-    }
-
-
-    const user = await User.findById({_id:req.user.id}).select("+password")
-
-    if (!user) {
-        return next(new AppError('User not found', 404));
-    }
-
-
-
-    if(!user.comparePassword(currentPassword,user.password))
-        return next(new AppError(
-    'the current password is not the right'
-    ,403))
-    
-
-    if(await user.comparePassword(newPassword,user.password))
-        return next(new AppError(
-            `you cann't set your current password as your new password`
-            ,400))
-
-    
-    if (newPassword !== passwordconfirm) {
-        return next(new AppError(
-            'Password confirmation does not match'
-            , 400));
-    }
-    
-    user.password = newPassword;
-    user.passwordconfirm = passwordconfirm
-    user.passwordChangedAt = Date.now()
-    await user.save();
-
-    res.status(200).json({
-        status:"success"
-    })
-
-})
-
-
 
 exports.deleteUser = catchAsync(async(req,res,next)=>{
 

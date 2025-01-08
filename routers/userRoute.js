@@ -19,7 +19,14 @@ router
 
 router
 .route("/resetpassword/:token")
-.post(authController.resetpassword)
+.post(authController.resetPassword)
+
+router
+.route("/refreshtoken")
+.post(authController.refreshToken)
+
+
+
 
 
 router.use(authController.protect)
@@ -30,11 +37,15 @@ router
 
 router
 .route('/changepassword')
-.post(userController.changePassword)
+.post(authController.changePassword)
 
 router
 .route('/deleteme')
 .patch(userController.deleteMe)
+
+router
+.route('/logout')
+.get(authController.logOut)
 
 router.use(authController.restrictTo('admin'))
 
