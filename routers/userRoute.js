@@ -67,4 +67,8 @@ router
 .route('/unblock/:id')
 .patch(userController.unBlock)
 
+router
+.route('/logout')
+.post(authController.logOut)
+
 module.exports = router

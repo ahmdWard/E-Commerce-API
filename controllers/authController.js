@@ -313,8 +313,12 @@ exports.logOut = catchAsync(async(req,res,next)=>{
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true
     })
+    res.cookie('jwt','loggedOut',{
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
     user.refreshToken=undefined;
-    await user.save({validateBeforeSave})
+    await user.save({validateBeforeSave:false})
 
     res.status(200).json({
         status:"success",
