@@ -4,7 +4,8 @@ const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
 dotenv.config()
 
-const userRoute = require('./routers/userRoute')
+const userRoute = require('./routes/userRoute')
+const productRoute = require('./routes/productRoute')
 const globalErrors = require('./middleware/errorController')
 
 
@@ -21,6 +22,7 @@ if (NODE_ENV === 'development') {
 
 
 app.use('/api/v1/user',userRoute)
+app.use('/api/v1/product',productRoute)
 
 app.use(globalErrors);
 
