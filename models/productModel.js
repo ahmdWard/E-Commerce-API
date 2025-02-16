@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const category = require('./categoryModel')
 
 const Product= new mongoose.Schema({
 
@@ -53,6 +54,11 @@ const Product= new mongoose.Schema({
     },
     brand: String,
     manufacturer: String
+  },
+  category:{
+    type:mongoose.Schema.ObjectId,
+    ref:"Category",
+    required:true
   }
 
 })
