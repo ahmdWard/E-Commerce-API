@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const { default: isEmail } = require('validator/lib/isEmail')
-const AppError = require('../utilts/appError')
+const AppError = require('../utils/appError')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
 const { type } = require('os')
@@ -96,4 +96,4 @@ userSchema.methods.genrateResetToken= function(){
 
 }
 
-module.exports=mongoose.model('user',userSchema)
+module.exports=mongoose.model('User',userSchema)

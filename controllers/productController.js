@@ -1,7 +1,7 @@
 const catchAsync = require('../middleware/catchAsync')
-const appError = require('../utilts/appError')
+const appError = require('../utils/appError')
 const Product = require('../models/productModel')
-const ApiFeatures = require('../utilts/apiFeatures')
+const ApiFeatures = require('../utils/apiFeatures')
 const factory = require('../controllers/handlerFactory')
 
 // @desc   CREATE product
