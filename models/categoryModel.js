@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const { trim, isLowercase } = require('validator')
 
-const categorSchema = new mongoose.Schema({
+const categorySchema = new mongoose.Schema({
 
     name:{
         type:String,
@@ -31,7 +31,7 @@ const categorSchema = new mongoose.Schema({
 { timestamps: true }
 );
 
-const category = mongoose.model("category",categorSchema)
+const category = mongoose.model("Category",categorySchema)
 
 module.exports = category
 

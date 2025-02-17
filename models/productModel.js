@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const category = require('./categoryModel')
 
 const Product= new mongoose.Schema({
 
@@ -59,8 +58,13 @@ const Product= new mongoose.Schema({
     type:mongoose.Schema.ObjectId,
     ref:"Category",
     required:true
+  },
+  brand:{
+    type:mongoose.Schema.ObjectId,
+    ref:"Brand",
+    required:true
   }
 
 })
 
-module.exports = mongoose.model('product',Product)
+module.exports = mongoose.model('Product',Product)
