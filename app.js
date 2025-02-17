@@ -10,6 +10,7 @@ const categoryRoute = require('./routes/categoryRoutes')
 const brandRoute = require('./routes/brandRoutes')
 const subCategoryRoute = require('./routes/subCategoryRoutes')
 const wishListRoute = require('./routes/wishListRoute')
+const reviewRoutes = require('./routes/reviewRoute')
 const globalErrors = require('./middleware/errorController')
 
 
@@ -31,6 +32,7 @@ app.use('/api/v1/category',categoryRoute)
 app.use('/api/v1/brand',brandRoute)
 app.use('/api/v1/subcategory',subCategoryRoute)
 app.use('/api/v1/wishList',wishListRoute)
+app.use('/api/v1/review',reviewRoutes)
 
 app.use(globalErrors);
 

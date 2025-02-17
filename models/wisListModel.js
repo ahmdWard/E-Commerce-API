@@ -16,6 +16,14 @@ const wishListSchema = new mongoose.Schema({
     
 },{timestamps:true})
 
+
+wishListSchema.pre(/^find/,function(next){
+
+    this.populate({path:"product"})
+
+    next()
+})
+
 const wishList= mongoose.model('WishList',wishListSchema)
 
 module.exports = wishList

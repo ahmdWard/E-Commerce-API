@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const Product= new mongoose.Schema({
+const productSchema = new mongoose.Schema({
 
    name:{
     type:String,
@@ -63,8 +63,36 @@ const Product= new mongoose.Schema({
     type:mongoose.Schema.ObjectId,
     ref:"Brand",
     required:true
-  }
+  },
+  subcategories: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "SubCategory",
+    },
+  ],
+  ratingsAverage: {
+    type: Number,
+    min: [1, "Rating must be above or equal 1.0"],
+    max: [5, "Rating must be below or equal 5.0 "],
+  },
+  ratingsQuantity: {
+    type: Number,
+    default: 0,
+  },
+ 
+},{ toJSON: { virtuals: true },
+toObject: { virtuals: true },timestamps:true})
 
+
+productSchema.virtual("reviews",{
+  ref:"Review",
+  foreignField:"product",
+  localField:"_id"
 })
 
-module.exports = mongoose.model('Product',Product)
+productSchema.pre(/^find/, function (next) {
+  this.populate({ path: "category", select: "name -_id" });
+  next();
+});
+
+module.exports = mongoose.model('Product',productSchema )

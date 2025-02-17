@@ -1,10 +1,8 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
-const { default: isEmail } = require('validator/lib/isEmail')
-const AppError = require('../utils/appError')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
-const { type } = require('os')
+
 
 const userSchema = new mongoose.Schema({
     firstname:{

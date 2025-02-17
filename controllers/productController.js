@@ -20,7 +20,7 @@ exports.getAllProducts = factory.getAll(Product ,"product")
 // @desc   Get specific product by id
 // @route GET /api/v1/products/:id
 // @access Public
-exports.getProduct = factory.getOne(Product)
+exports.getProduct = factory.getOne(Product,"reviews")
 
 // @desc   UPDATE specific product by id
 // @route Patch /api/v1/products/:id

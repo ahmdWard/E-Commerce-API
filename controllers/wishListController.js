@@ -20,7 +20,7 @@ exports.addProductToWishList = catchAsync(async(req,res,next)=>{
         {user:req.user._id},
         {$addToSet : {product:productId}},
         {new:true,upsert: true}
-    ).populate("product")
+    )
     
     res.status(200).json({
         status:"success",
