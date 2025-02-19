@@ -2,19 +2,24 @@ const mongoose = require('mongoose')
 
 const productSchema = new mongoose.Schema({
 
-   name:{
+   title:{
     type:String,
-    required:[true,'product name is required']
+    required:[true,'product title is required']
    },
    slug:{
     type:String,
     required:[true,'product slug is required'],
     unique:true
    },
+   description:{
+    type:String,
+    required:true
+   },
    price:{
     amount:{
         type:Number,
-        required:true
+        required:true,
+        min: [0, "Price amount must be positive"]
     },
     compareAtPrice:Number,
     currency:{
@@ -28,17 +33,11 @@ const productSchema = new mongoose.Schema({
     isDefault:Boolean,
    }],
 
-   variants: [{
-    sku: String,
-    name: String,
-    price: Number,
-    quantity: Number,
-    attributes: [{
-      name: String,
-      value: String
-    }]
-  }],
-
+   inventory:{
+    type:mongoose.Schema.ObjectId,
+    ref:"Inventory",
+    require:true
+   },
    specifications: {
     weight: Number,
     dimensions: {
@@ -51,17 +50,15 @@ const productSchema = new mongoose.Schema({
         default: 'cm'
       }
     },
-    brand: String,
-    manufacturer: String
+    brand:{
+      type:mongoose.Schema.ObjectId,
+      ref:"Brand",
+      required:true
+    },
   },
   category:{
     type:mongoose.Schema.ObjectId,
     ref:"Category",
-    required:true
-  },
-  brand:{
-    type:mongoose.Schema.ObjectId,
-    ref:"Brand",
     required:true
   },
   subcategories: [
@@ -74,6 +71,7 @@ const productSchema = new mongoose.Schema({
     type: Number,
     min: [1, "Rating must be above or equal 1.0"],
     max: [5, "Rating must be below or equal 5.0 "],
+    default:0
   },
   ratingsQuantity: {
     type: Number,
@@ -90,9 +88,18 @@ productSchema.virtual("reviews",{
   localField:"_id"
 })
 
+productSchema.virtual("discount").get(function(){
+  if(this.price.compareAtPrice && this.price.compareAtPrice > this.price){
+    return Math.round(((this.price.compareAtPrice -this.price.amount) / this.price.compareAtPrice)*100) 
+  }
+  return 0; 
+});
+
 productSchema.pre(/^find/, function (next) {
-  this.populate({ path: "category", select: "name -_id" });
+  this.populate({ path: "category", select: "name -_id" })
+  .populate({ path: "inventory", select: "stock reservedStock sold restocks lastUpdated" });;
   next();
 });
+
 
 module.exports = mongoose.model('Product',productSchema )
