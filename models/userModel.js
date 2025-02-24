@@ -2,6 +2,8 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
+const { type } = require('os')
+const { timeStamp } = require('console')
 
 
 const userSchema = new mongoose.Schema({
@@ -58,8 +60,32 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:false,
 
-    }
-})
+    },
+    address:[
+        {
+            country:{
+                type:String,
+                required:true
+            },
+            state:{
+                type:String,
+                required:true
+            },
+            street:{
+                type:String,
+                required:true
+            },
+            building:{
+                type:Number,
+                required:true
+            },
+            flatNumber:{
+                type:Number,
+                required:true
+            }
+        }
+    ],
+},{timeStamp:true})
 
 userSchema.pre('save',async function(next){
 
@@ -94,4 +120,8 @@ userSchema.methods.genrateResetToken= function(){
 
 }
 
+userSchema.virtual('mainAddress').get(function(){
+
+    return this.address[0]
+})
 module.exports=mongoose.model('User',userSchema)
