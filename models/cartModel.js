@@ -38,16 +38,16 @@ cartSchema.methods.calcTotalPrice = async function(){
      },0)
 }
 
-cartSchema.methods.addProduct = async function(productId) {
+cartSchema.methods.addProduct = async function(productId,quantity) {
     
     const productIndex = this.products.findIndex(
         item => item.product.toString() === productId.toString() 
     )
 
     if(productIndex > -1){
-        this.products[productIndex].quantity += 1;
+        this.products[productIndex].quantity += quantity;
     }else{
-        this.products.push({product:productId,quantity:1})
+        this.products.push({product:productId,quantity:quantity})
     }
 
     await this.save();
