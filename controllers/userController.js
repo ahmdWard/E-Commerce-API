@@ -43,7 +43,7 @@ exports.getUser = catchAsync(async(req,res,next)=>{
 
 exports.updateMe = catchAsync(async(req,res,next)=>{
 
-    const {firstname,lastname,phone,email} = req.body
+    const {firstname,lastname,phone,email,address} = req.body
     
     const {password,passwordconfirm} = req.body
 
@@ -56,7 +56,8 @@ exports.updateMe = catchAsync(async(req,res,next)=>{
         firstname,
         lastname,
         phone,
-        email
+        email,
+     $push : { address: req.body.address }
     },{
         new:true,
         runValidtors:true
