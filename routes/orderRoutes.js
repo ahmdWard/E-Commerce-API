@@ -11,5 +11,18 @@ router
 .get(orderController.getOrder)
 .patch(orderController.cancelOrder)
 
+router
+.route('/')
+.get(authController.restrictTo('admin'),orderController.getallOrder)
+
+router
+.route('/checkout')
+.post(orderController.createOrder)
+
+router
+.route('/:id/cancel')
+.patch(orderController.cancelOrder)
+
+
 
 module.exports = router

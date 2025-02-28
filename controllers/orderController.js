@@ -7,6 +7,7 @@ const Payment = require('../models/paymentModel')
 const Cart = require('../models/cartModel')
 const factory = require('../controllers/handlerFactory')
 const User = require('../models/userModel')
+const shipping = require('../models/shipmentModel')
 
 // @desc get an  order
 // @route get /api/v1/order/:id
@@ -57,32 +58,36 @@ exports.cancelOrder = catchAsync(async(req,res,next)=>{
 })
 
 // @desc create an order
-// @route PATCH /api/v1/order/checkout
+// @route POST /api/v1/order/checkout
 // @access Private/protect/user
 
 
-exports.createOrder =catchAsync(async(req,res,next)=>{
+exports.createOrder = catchAsync(async(req,res,next)=>{
     
-    const user = await User.findById(req.user._id).lean(); 
-    const cart = await Cart.findOne({user:req.user._id})
-    
+    let order = await Order.findOne({user:req.user._id})
 
-    if(!cart || cart.length===0)
+    if(order)
+        return next(new AppError('order is already created'),400)
+
+    const user = await User.findById(req.user._id)
+    const cart = await Cart.findOne({user:req.user._id}).populate('items.product')
+
+    if(!cart || cart.items.length===0)
         return next (new AppError('cart is empty'),404)
 
-  
+      
     const orderItems = cart.items.map(item => ({
         product: item.product._id,
         quantity: item.quantity,
         priceAtPurchase: item.product.price.amount,
       }));
 
-    const order = await Order.create({
+     order = await Order.create({
         user:req.user._id,
         items:orderItems,
         totalPrice:cart.totalPrice,
-        paymentMethod:req.body.paymentMethod||'COD',
-        address:user.mainAddress
+        paymentMethod:req.body.paymentMethod||'stripe',
+        address:user.mainAddress || req.body.address
     })
 
     res.status(201).json({
