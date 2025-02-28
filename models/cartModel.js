@@ -8,7 +8,7 @@ const cartSchema = new mongoose.Schema({
       ref:'User',
       required:true
     },
-    products: [
+    items: [
         {
           product: {
             type: mongoose.Schema.ObjectId,
@@ -31,23 +31,23 @@ const cartSchema = new mongoose.Schema({
 
 cartSchema.methods.calcTotalPrice = async function(){
 
-     await this.populate('products.product');
+     await this.populate('items.product');
 
-     this.totalPrice = this.products.reduce((sum,item)=>{
+     this.totalPrice = this.items.reduce((sum,item)=>{
        return sum + item.quantity * item.product.price.amount 
      },0)
 }
 
 cartSchema.methods.addProduct = async function(productId,quantity) {
     
-    const productIndex = this.products.findIndex(
+    const productIndex = this.items.findIndex(
         item => item.product.toString() === productId.toString() 
     )
 
     if(productIndex > -1){
-        this.products[productIndex].quantity += quantity;
+        this.items[productIndex].quantity += quantity;
     }else{
-        this.products.push({product:productId,quantity:quantity})
+        this.items.push({product:productId,quantity:quantity})
     }
 
     await this.save();
@@ -56,16 +56,16 @@ cartSchema.methods.addProduct = async function(productId,quantity) {
 
 cartSchema.methods.updateNumberOfItems =async function(productId,quantity) {
 
-    const productIndex = this.products.findIndex(
+    const productIndex = this.items.findIndex(
       item => item.product.toString() === productId.toString()
     )
 
     
     if (productIndex > -1) {
       if (quantity <= 0) {
-        this.products.splice(productIndex, 1); 
+        this.items.splice(productIndex, 1); 
     } else {
-        this.products[productIndex].quantity = quantity;
+        this.items[productIndex].quantity = quantity;
       }
     }
     await this.save()

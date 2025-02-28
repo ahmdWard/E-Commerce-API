@@ -13,7 +13,7 @@ exports.addItemToCart = catchAsync(async(req,res,next)=>{
     const userId = req.user._id
     const  productId  = req.body.products.product;
     const  quantity = req.body.products.quantity;
-    
+
     let cart = await Cart.findOne({user:userId})
 
     if(!cart){
@@ -27,7 +27,7 @@ exports.addItemToCart = catchAsync(async(req,res,next)=>{
 
     res.status(200).json({
         status:"success",
-        numberOfItems: cart.products.length,
+        numberOfItems: cart.items.length,
         data:{
             cart
         }
@@ -51,7 +51,7 @@ exports.removeItemFromCart = catchAsync(async(req,res,next)=>{
       await cart.save();
     res.status(200).json({
         status:"success",
-        numberOfItems: cart.products.length,
+        numberOfItems: cart.items.length,
         data:{
             cart
         }
@@ -71,7 +71,7 @@ exports.getCart = catchAsync(async(req,res,next)=>{
 
     res.status(200).json({
         status:"success",
-        numberOfItems: cart.products.length,
+        numberOfItems: cart.items.length,
         data:{
             cart
         }
@@ -100,7 +100,7 @@ exports.updateCartItemQuantity = catchAsync(async(req,res,next)=>{
 
     res.status(200).json({
         status: 'success',
-        numberOfItems: cart.products.length,
+        numberOfItems: cart.items.length,
         data: cart,
       });
 })
