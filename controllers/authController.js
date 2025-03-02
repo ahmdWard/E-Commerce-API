@@ -6,9 +6,10 @@ const User = require('../models/userModel')
 const AppError = require('../utils/appError')
 const catchAsync = require('../middleware/catchAsync');
 const sendEmail = require('../utils/sendEmail')
+const redisClient  = require('../config/redisConnenct')
 
 
-const generateTokens = (userId) => {
+const generateTokens = async (userId) => {
     const accessToken = jwt.sign({ id: userId }, process.env.ACCESS_SECRET, {
         expiresIn: process.env.ACCESS_EXPIRATION, 
     });
@@ -16,6 +17,8 @@ const generateTokens = (userId) => {
     const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_SECRET, {
         expiresIn: process.env.REFRESH_EXPIRATION, 
     });
+
+    await redisClient.set(userId.toString(), refreshToken, 'EX', 3 * 24 * 60 * 60); 
 
     return { accessToken, refreshToken };
 };
@@ -26,7 +29,7 @@ exports.protect = catchAsync(async(req,res,next)=>{
 
     let token
 
-    if(req.headers.authorization && !req.headers.authorization.startsWith('Bearer')){
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
         token = req.headers.authorization.split(' ')[1]
     }
     else if (req.cookies.jwt) {
@@ -62,24 +65,30 @@ exports.refreshToken = catchAsync(async(req,res,next)=>{
     'Refresh token is required',400
     ))
 
-    const decoded = await promisify(jwt.verify)(refreshToken,process.env.REFRESH_SECRET)
 
-    const currentUser = await User.findById(decoded.id)
-    
-    if(!currentUser){
-         
-        return next(new AppError(
-            'The user belonging to this token does no longer exist.',
-            401
-        ))
+let decoded;
+    try {
+        decoded = await promisify(jwt.verify)(refreshToken, process.env.REFRESH_SECRET);
+    } catch (err) {
+        return next(new AppError('Invalid or expired refresh token', 401));
     }
 
-    const { accessToken } = generateTokens(currentUser.id);
+    const storedToken = await redisClient.get(decoded.id);
+    if (!storedToken || storedToken !== refreshToken) {
+        return next(new AppError('Refresh token is not valid', 403));
+    }
+
+    const { accessToken, refreshToken:newRefreshToken } = await generateTokens(decoded.id);
 
     res.cookie('jwt',accessToken,{
-        expires: new Date(Date.now()+process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+        expires: new Date(Date.now()+process.env.ACCESS_TOKEN_COOKIE_EXPIRE * 60 * 60 * 1000),
         httpOnly:true
     })
+    res.cookie('refreshToken',newRefreshToken,{
+        expires:new Date(Date.now() + process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+        httpOnly:true
+    })
+    
 
     res.status(200).json({
         status: 'success',
@@ -90,7 +99,7 @@ exports.refreshToken = catchAsync(async(req,res,next)=>{
 
 
 exports.signUp = catchAsync(async(req,res,next)=>{
-    const { firstname, lastname , email, phone, password, passwordconfirm ,role } = req.body;
+    const { firstname, lastname , email, phone, password, passwordconfirm ,role, address } = req.body;
 
     if (!firstname ||!lastname || !email || !phone || !password || !passwordconfirm) {
          return next(new AppError(
@@ -105,7 +114,8 @@ exports.signUp = catchAsync(async(req,res,next)=>{
         phone: phone.trim(),
         password,
         passwordconfirm,
-        role, 
+        role,
+        address
     });
 
     res.status(201).json({
@@ -135,19 +145,19 @@ exports.login = catchAsync(async(req,res,next)=>{
     ,403))
 
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = await generateTokens(user.id);
 
 
 
     await user.save({validateBeforeSave:false})
 
     res.cookie('jwt',accessToken,{
-        expires:new Date(Date.now() + 24 * 60 * 60 * 1000),
+        expires:new Date(Date.now() + process.env.ACCESS_TOKEN_COOKIE_EXPIRE * 60 * 60 * 1000),
         httpOnly:true
     })
     
     res.cookie('refreshToken',refreshToken,{
-        expires:new Date(Date.now() + process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 60 * 60 * 1000),
+        expires:new Date(Date.now() + process.env.REFRESH_TOKEN_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
         httpOnly:true
     })
     
@@ -165,23 +175,23 @@ exports.login = catchAsync(async(req,res,next)=>{
 
 exports.logOut = catchAsync(async(req,res,next)=>{
 
-    const user = await User.findById(req.user.id)
-    res.cookie('refreshToken','loggedOut',{
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
-    })
-    res.cookie('jwt','loggedOut',{
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
-    })
+    const refreshToken = req.cookies.refreshToken;
 
-    res.status(200).json({
-        status:"success",
-        message:"Logged out successfully"
-    })
+    if (refreshToken) {
+        let decoded;
+        try {
+            decoded = await promisify(jwt.verify)(refreshToken, process.env.REFRESH_SECRET);
+            await redisClient.del(decoded.id); 
+        } catch (err) {
+            console.log('Invalid token, but clearing cookies anyway.');
+        }
+    }
+
+    res.clearCookie('refreshToken');
+    res.clearCookie('jwt');
+    res.status(200).json({ status: 'success', message: 'Logged out successfully' });
 
 })
-
 
 
 
@@ -213,7 +223,7 @@ exports.forgetPassword = catchAsync(async(req,res,next)=>{
         'Please enter a valid e-mail'
          ,400))
 
-    const resetToken = user.genrateResetToken()
+    const resetToken = user.generateResetToken()
 
     try {
         await user.save({ validateBeforeSave: false });
@@ -306,11 +316,15 @@ exports.resetPassword = catchAsync(async(req,res,next)=>{
 
     const {newPassword ,passwordconfirm} = req.body
     
-    if(await user.comparePassword(newPassword,user.password))
-        return next(new AppError(
-            `you cann't set your current password as your new password`
-            ,400))
+    console.log(newPassword,passwordconfirm);
 
+    try {
+        await user.updatePassword(newPassword);
+    } catch (error) {
+        return next(new AppError(error.message, 400));
+    }
+
+    
 
     user.password=newPassword
     user.passwordconfirm=passwordconfirm
@@ -320,6 +334,9 @@ exports.resetPassword = catchAsync(async(req,res,next)=>{
     user.passwordResetTokenExpire=undefined
 
     await user.save()
+
+    res.clearCookie('refreshToken');
+    res.clearCookie('jwt');
 
     res.status(200).json({
         status:"success",
@@ -353,11 +370,11 @@ exports.changePassword = catchAsync(async(req,res,next)=>{
     ,403))
     
 
-    if(await user.comparePassword(newPassword,user.password))
-        return next(new AppError(
-            `you cann't set your current password as your new password`
-            ,400))
-
+    try {
+        await user.updatePassword(req.body.newPassword);
+    } catch (error) {
+        return next(new AppError(error.message, 400));
+    }
     
     if (newPassword !== passwordconfirm) {
         return next(new AppError(
