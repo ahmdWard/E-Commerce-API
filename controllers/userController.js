@@ -3,6 +3,9 @@ const catchAsync = require('../middleware/catchAsync')
 const AppError= require('../utils/appError')
 
 
+// @desc  Get list of users
+// @route GET /api/v1/user
+// @access private/admin
 exports.getAllUsers  = catchAsync(async(req,res,next)=>{
 
     const users = await User.find()
@@ -16,6 +19,10 @@ exports.getAllUsers  = catchAsync(async(req,res,next)=>{
     })
 })
 
+
+// @desc  create  user
+// @route POST /api/v1/user
+// @access public/user
 exports.createUser = catchAsync(async(req,res,next)=>{
     
     return next(new AppError(
@@ -24,6 +31,10 @@ exports.createUser = catchAsync(async(req,res,next)=>{
     ))
 })
 
+
+// @desc  Get a specific user
+// @route GET /api/v1/user/:id
+// @access private/user
 exports.getUser = catchAsync(async(req,res,next)=>{
 
     const user = await User.findById(req.params.id)
@@ -41,9 +52,13 @@ exports.getUser = catchAsync(async(req,res,next)=>{
     })
 })
 
+// @desc  update user
+// @route PATCH /api/v1/user/:id
+// @access private/user
+
 exports.updateMe = catchAsync(async(req,res,next)=>{
 
-    const {firstname,lastname,phone,email,address} = req.body
+    const { firstname, lastname, phone, email, address } = req.body
     
     const {password,passwordconfirm} = req.body
 
@@ -57,7 +72,7 @@ exports.updateMe = catchAsync(async(req,res,next)=>{
         lastname,
         phone,
         email,
-     $push : { address: req.body.address }
+        address
     },{
         new:true,
         runValidtors:true
@@ -71,6 +86,9 @@ exports.updateMe = catchAsync(async(req,res,next)=>{
     })
 })
 
+// @desc  unactive user
+// @route POST /api/v1/user/:id
+// @access private/user
 exports.deleteMe = catchAsync(async(req,res,next)=>{
 
     await User.findByIdAndUpdate(req.user.id, { active: false });
@@ -83,6 +101,9 @@ exports.deleteMe = catchAsync(async(req,res,next)=>{
 })
 
 
+// @desc  delete user
+// @route DELETE /api/v1/user/:id
+// @access private/admin
 exports.deleteUser = catchAsync(async(req,res,next)=>{
 
     const deletedUser = await User.findByIdAndDelete(req.params.id)

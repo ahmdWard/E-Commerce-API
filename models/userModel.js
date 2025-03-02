@@ -2,8 +2,6 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
-const { type } = require('os')
-const { timeStamp } = require('console')
 
 
 const userSchema = new mongoose.Schema({
@@ -45,7 +43,7 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type:String,
-        enum:['user','admin'],
+        enum:[ 'user','admin','manager','vendor' ],
         default:'user'
     },
     passwordChangedAt:Date,
@@ -61,7 +59,7 @@ const userSchema = new mongoose.Schema({
         default:false,
 
     },
-    address:[
+    address:
         {
             country:{
                 type:String,
@@ -84,8 +82,8 @@ const userSchema = new mongoose.Schema({
                 required:true
             }
         }
-    ],
-},{toJSON: { virtuals: true },toObject: { virtuals: true },timeStamp:true})
+    ,
+},{timeStamp:true})
 
 userSchema.pre('save',async function(next){
 
@@ -108,7 +106,7 @@ userSchema.methods.comparePassword = async function (candidatePassword,userPassw
     
 }
 
-userSchema.methods.genrateResetToken= function(){
+userSchema.methods.generateResetToken= function(){
     
     const resetToken = crypto.randomBytes(32).toString('hex')
 
@@ -120,8 +118,10 @@ userSchema.methods.genrateResetToken= function(){
 
 }
 
-userSchema.virtual('mainAddress').get(function(){
-
-    return this.address[0]
-})
+userSchema.methods.updatePassword = async function (newPassword) {
+    if (await this.comparePassword(newPassword, this.password)) {
+        throw new Error("New password must be different from the old password");
+    }
+   
+};
 module.exports=mongoose.model('User',userSchema)

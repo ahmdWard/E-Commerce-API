@@ -26,6 +26,9 @@ router
 .post(authController.refreshToken)
 
 
+router
+.route('/')
+.post(userController.createUser)
 
 
 
@@ -53,27 +56,27 @@ router
 
 
 
-router.use(authController.restrictTo('admin'))
+
 
 
 
 router
 .route('/')
-.get(userController.getAllUsers)
-.post(userController.createUser)
+.get(authController.restrictTo('admin','manager'),userController.getAllUsers)
+
 
 router
 .route('/:id')
 .get(userController.getUser)
-.delete(userController.deleteUser)
+.delete(authController.restrictTo('admin','manager'),userController.deleteUser)
 
 router
 .route('/block/:id')
-.patch(userController.block)
+.patch(authController.restrictTo('admin','manager'),userController.block)
 
 router
 .route('/unblock/:id')
-.patch(userController.unBlock)
+.patch(authController.restrictTo('admin','manager'),userController.unBlock)
 
 
 module.exports = router
