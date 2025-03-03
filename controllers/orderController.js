@@ -1,42 +1,48 @@
+const mongoose = require('mongoose')
 const catchAsync = require('../middleware/catchAsync')
 const AppError = require('../utils/appError')
 const Order = require('../models/orderModel')
-const Transaction = require('../models/transactionModel')
-const Shipping = require('../models/shipmentModel')
-const Payment = require('../models/paymentModel')
 const Cart = require('../models/cartModel')
-const factory = require('../controllers/handlerFactory')
 const User = require('../models/userModel')
-const shipping = require('../models/shipmentModel')
+const factory = require('../controllers/handlerFactory')
+
 
 // @desc get an  order
 // @route get /api/v1/order/:id
 // @access Private/protect/user
-
 exports.getOrder = factory.getOne(Order)
 
 
 // @desc get all order
 // @route get /api/v1/order
 // @access Private/protect/admin
-
-
 exports.getallOrder = factory.getAll(Order)
 
 
 // @desc cancel an order
-// @route PATCH /api/v1/order/:id
+// @route PATCH /api/v1/order/:id/cancel
 // @access Private/protect/user
-
 exports.cancelOrder = catchAsync(async(req,res,next)=>{
 
-    const order = await Order.findOne(req.params.orderId)
+    const  {orderId} = req.params
+
+    // if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    //     return next(new AppError('Invalid order ID', 400));
+    // }
+
+    const order = await Order.findOne(orderId)
+
 
     if(!order)
         return next (new AppError('There is no order for now',404))
 
-    if(order.user.toString()!==req.user._id){
+    if(order.user.toString()!==req.user._id.toString()){
         return next(new AppError('This order is not for that user',403))
+    }
+
+    const allowedStatuses = ['pending', 'shipped', 'cancelled','proccessing'];
+    if (!allowedStatuses.includes(order.status)) {
+        return next(new AppError('Invalid order status', 400));
     }
 
 
@@ -60,21 +66,25 @@ exports.cancelOrder = catchAsync(async(req,res,next)=>{
 // @desc create an order
 // @route POST /api/v1/order/checkout
 // @access Private/protect/user
-
-
 exports.createOrder = catchAsync(async(req,res,next)=>{
     
-    let order = await Order.findOne({user:req.user._id})
+    const userId = req.user._id;
+    const { paymentMethod = 'stripe', address } = req.body;
 
-    if(order)
-        return next(new AppError('order is already created'),400)
+   const existingOrder = await Order.findOne({ user: userId });
+    if (existingOrder) {
+        return next(new AppError('Order is already created for this user', 400));
+    }
 
-    const user = await User.findById(req.user._id)
-    const cart = await Cart.findOne({user:req.user._id}).populate('items.product')
+    const cart = await Cart.findOne({user:userId}).populate('items.product')
 
     if(!cart || cart.items.length===0)
         return next (new AppError('cart is empty'),404)
 
+    if (!address) {
+        return next(new AppError('Please provide a delivery address', 400));
+    }
+     
       
     const orderItems = cart.items.map(item => ({
         product: item.product._id,
@@ -82,12 +92,12 @@ exports.createOrder = catchAsync(async(req,res,next)=>{
         priceAtPurchase: item.product.price.amount,
       }));
 
-     order = await Order.create({
-        user:req.user._id,
+     const order = await Order.create({
+        user:userId,
         items:orderItems,
         totalPrice:cart.totalPrice,
-        paymentMethod:req.body.paymentMethod||'stripe',
-        address:user.mainAddress || req.body.address
+        paymentMethod,
+        address:address
     })
 
     res.status(201).json({
