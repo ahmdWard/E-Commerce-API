@@ -24,7 +24,6 @@
 8. [Utilities](#utilities)
 9. [Error Handling](#error-handling)
 10. [Environment Variables](#environment-variables)
-11. [Deployment](#deployment)
 
 ---
 
