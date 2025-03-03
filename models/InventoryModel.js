@@ -36,9 +36,8 @@ const inventorySchema = new mongoose.Schema({
         default:Date.now
     }
 
-})
+},{timestamps:true})
 
-// inventory tracking and stock points 
 
 const inventory = mongoose.model('Inventory',inventorySchema)
 

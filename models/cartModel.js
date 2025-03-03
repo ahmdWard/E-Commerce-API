@@ -20,26 +20,53 @@ const cartSchema = new mongoose.Schema({
             required: true,
             min: 1,
             default: 1
-          }
+          },
+          addedAt: { type: Date, default: Date.now }
         }
       ],
       totalPrice:{
         type:Number,
         default:0
+      },
+      lastModified: {
+        type: Date,
+        default: Date.now
       }
+},{
+  toJSON:{virtuals:true},
+  toObject:{virtuals:true}
 })
+
+cartSchema.virtual('itemCount').get(function() {
+  return this.items.length;
+});
+
+cartSchema.virtual('totalQuantity').get(function() {
+  return this.items.reduce((sum, item) => sum + item.quantity, 0);
+});
 
 cartSchema.methods.calcTotalPrice = async function(){
 
-     await this.populate('items.product');
+      await this.populate({
+        path: 'items.product',
+        select: 'price'
+      });
 
      this.totalPrice = this.items.reduce((sum,item)=>{
-       return sum + item.quantity * item.product.price.amount 
+       return sum + (item.quantity * item.product.price.amount) 
      },0)
 }
 
 cartSchema.methods.addProduct = async function(productId,quantity) {
     
+  if (!mongoose.isValidObjectId(productId)) {
+    throw new Error('Invalid product ID');
+  }
+  
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    throw new Error('Quantity must be a positive integer');
+  }
+
     const productIndex = this.items.findIndex(
         item => item.product.toString() === productId.toString() 
     )
@@ -50,27 +77,9 @@ cartSchema.methods.addProduct = async function(productId,quantity) {
         this.items.push({product:productId,quantity:quantity})
     }
 
-    await this.save();
+   this.lastModified = Date.now();
+  return this.save();
 }
-
-
-cartSchema.methods.updateNumberOfItems =async function(productId,quantity) {
-
-    const productIndex = this.items.findIndex(
-      item => item.product.toString() === productId.toString()
-    )
-
-    
-    if (productIndex > -1) {
-      if (quantity <= 0) {
-        this.items.splice(productIndex, 1); 
-    } else {
-        this.items[productIndex].quantity = quantity;
-      }
-    }
-    await this.save()
-}
-
 
 cartSchema.pre('save',async function(next){
   await this.calcTotalPrice()
