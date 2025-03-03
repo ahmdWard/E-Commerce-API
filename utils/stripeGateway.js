@@ -1,4 +1,4 @@
-const stripe = require('stripe')('sk_test_51QwMf5BnESqnG3mYufFN5OIMSDBr8CUQpVgsjcJGMeJ64rHXpu9sSk72Yd9Njz8RHeGkVTtIvWbrm2xtWZZQskha00zTaTKv71'); // Use environment variable instead
+const stripe = require('stripe')(process.env.SECRET_KEY);
 
 exports.createCheckoutSession = async (amount, currency = 'usd', metadata={},req) => {
   try {

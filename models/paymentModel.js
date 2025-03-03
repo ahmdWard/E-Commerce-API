@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
     },
     order:{
         type:mongoose.Schema.ObjectId,
-        ref:'product',
+        ref:'Order',
         required:true,
     },
     currency:{

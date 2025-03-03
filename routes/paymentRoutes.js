@@ -20,5 +20,9 @@ router
 .route('/:paymentId')
 .get(paymentController.getPayment)
 
+router
+.route('/')
+.get(paymentController.getAllPayments)
+
 
 module.exports  = router
