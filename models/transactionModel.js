@@ -2,11 +2,9 @@ const mongoose = require('mongoose')
 
 const transactionSchema = new mongoose.Schema({
     user:{
-        type:{
             type:mongoose.Schema.ObjectId,
             ref:'User',
             required:true
-        }
     },
     order:{
         type:mongoose.Schema.ObjectId,
@@ -20,7 +18,7 @@ const transactionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Success", "Failed", "Pending"],
+        enum: ["Success", "Failed","Pending"],
         default: "Pending" 
     },
     gateWayResponse:{

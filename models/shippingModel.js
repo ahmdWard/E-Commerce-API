@@ -13,10 +13,9 @@ const shippingSchema = new mongoose.Schema({
     },
     status:{
         type:String,
-        enum:['pending,delivered,shipped']
+        enum:['pending' ,'out of delivery' ,'delivered']
     },
-    address:[
-        {
+    address:{
             country:{
                 type:String,
                 required:true
@@ -38,7 +37,7 @@ const shippingSchema = new mongoose.Schema({
                 required:true
             }
         }
-    ]
+    
 },{timestamps:true})
 
 
