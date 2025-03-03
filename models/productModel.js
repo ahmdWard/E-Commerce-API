@@ -32,12 +32,6 @@ const productSchema = new mongoose.Schema({
     alt:String,
     isDefault:Boolean,
    }],
-
-   inventory:{
-    type:mongoose.Schema.ObjectId,
-    ref:"Inventory",
-    require:true
-   },
    specifications: {
     weight: Number,
     dimensions: {
@@ -71,7 +65,7 @@ const productSchema = new mongoose.Schema({
     type: Number,
     min: [1, "Rating must be above or equal 1.0"],
     max: [5, "Rating must be below or equal 5.0 "],
-    default:0
+    default:1
   },
   ratingsQuantity: {
     type: Number,
@@ -89,15 +83,14 @@ productSchema.virtual("reviews",{
 })
 
 productSchema.virtual("discount").get(function(){
-  if(this.price.compareAtPrice && this.price.compareAtPrice > this.price){
+  if(this.price.compareAtPrice && (this.price.compareAtPrice > this.price.amount)){
     return Math.round(((this.price.compareAtPrice -this.price.amount) / this.price.compareAtPrice)*100) 
   }
   return 0; 
 });
 
 productSchema.pre(/^find/, function (next) {
-  this.populate({ path: "category", select: "name -_id" })
-  .populate({ path: "inventory", select: "stock reservedStock sold restocks lastUpdated" });;
+  this.populate({ path: "category", select: "name _id" });
   next();
 });
 

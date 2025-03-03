@@ -24,5 +24,5 @@ exports.updateBrand = factory.updateOne(Brand);
 
 // @desc   Delete specific brand
 // @route  DELETE /api/v1/brand
-// @access Private/Admin
+// @access Private/Admin-manager
 exports.deleteBrand = factory.deleteOne(Brand);

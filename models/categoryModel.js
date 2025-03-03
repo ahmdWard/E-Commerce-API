@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const { trim, isLowercase } = require('validator')
 
 const categorySchema = new mongoose.Schema({
 

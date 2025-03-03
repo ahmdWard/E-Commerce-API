@@ -23,5 +23,5 @@ exports.updateCategory = factory.updateOne(Cateogory);
 
 // @desc   Delete specific category
 // @route  DELETE /api/v1/categories
-// @access Private/Admin
+// @access Private/Admin-manager
 exports.deleteCategory = factory.deleteOne(Cateogory);
